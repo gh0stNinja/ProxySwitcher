@@ -1,4 +1,10 @@
 # -*- coding: utf-8 -*-
+'''
+Author: gh0stNinja
+Blog: https://gh0stninja.github.io/
+Date: 2024-06-14 14:31:34
+Description: 
+'''
 from burp import IBurpExtender, IHttpListener, ITab, IExtensionHelpers
 from javax.swing import JPanel, JLabel, JTextField, JButton, JCheckBox, JTextArea, JScrollPane, JRadioButton, ButtonGroup, BoxLayout, Box
 from javax.swing.border import EmptyBorder
@@ -29,20 +35,20 @@ class BurpExtender(IBurpExtender, IHttpListener, ITab):
         self.toggle_plugin = JCheckBox(u"开启插件", actionPerformed=self.toggleSwitch)
         self.clear_button = JButton(u'清除日志', actionPerformed=self.clearOutput)
         self.load_from_text_button = JButton(u'加载代理', actionPerformed=self.loadProxiesFromText)
-        self.request_count_label = JLabel(u"请求次数: ")
-        self.request_count_field = JTextField("1", 5)
+        # self.request_count_label = JLabel(u"请求次数: ")
+        # self.request_count_field = JTextField("1", 5)
 
         # 添加HTTP地址输入框和获取代理按钮
         self.http_address_label = JLabel(u"URL地址: ")
-        self.http_address_field = JTextField("http://192.168.1.202:5010/all/", 20)
+        self.http_address_field = JTextField("http://192.168.1.204:5010/all/", 20)
         self.fetch_proxies_button = JButton(u'获取代理', actionPerformed=self.fetchProxies)
 
         # 代理类型选择
         self.radio_http = JRadioButton("HTTP", True)
-        # self.radio_socks5 = JRadioButton("SOCKS5")
+        self.radio_https = JRadioButton("HTTPS")
         self.radio_group = ButtonGroup()
-        # self.radio_group.add(self.radio_socks5)
         self.radio_group.add(self.radio_http)
+        self.radio_group.add(self.radio_https)
         
         # 将组件添加到顶部面板
         self.top_panel.add(self.toggle_plugin)
@@ -53,11 +59,11 @@ class BurpExtender(IBurpExtender, IHttpListener, ITab):
         self.top_panel.add(self.load_from_text_button)
         self.top_panel.add(self.clear_button)
         self.top_panel.add(Box.createHorizontalStrut(20))
-        self.top_panel.add(self.request_count_label)
-        self.top_panel.add(self.request_count_field)
+        # self.top_panel.add(self.request_count_label)
+        # self.top_panel.add(self.request_count_field)
         self.top_panel.add(Box.createHorizontalStrut(20))
         self.top_panel.add(self.radio_http)
-        # self.top_panel.add(self.radio_socks5)
+        self.top_panel.add(self.radio_https)
         
         # 创建中部面板，包含两个子面板和分隔线
         self.middle_panel = JPanel()
@@ -146,9 +152,20 @@ class BurpExtender(IBurpExtender, IHttpListener, ITab):
     def displayProxies(self, proxies):
         self.proxy_text_area.setText("")  # 清空当前内容
         for proxy in proxies:
-            proxy_address = proxy.get('proxy', '')
-            self.proxy_text_area.append("{}\n".format(proxy_address))
-        self.response_area.append(u"代理已加载\n")
+            # 根据选择的代理类型设置协议
+            if self.radio_https.isSelected():
+                if proxy['https']:
+                    proxy_address = proxy.get('proxy', '')
+                    self.proxy_text_area.append("[HTTPS] {}\n".format(proxy_address))
+            else:
+                if not proxy['https']:
+                    proxy_address = proxy.get('proxy', '')
+                    self.proxy_text_area.append("[HTTP] {}\n".format(proxy_address))
+        self.response_area.append(u"代理获取成功\n")
+        # 从文本区域加载代理
+        proxy_text = self.proxy_text_area.getText()
+        self.proxies = [line.strip() for line in proxy_text.split('\n') if line.strip()]
+        self.response_area.append(u"Proxy List loaded.\n")
 
     def loadProxiesFromText(self, event=None):
         if not self.enabled:
@@ -164,22 +181,14 @@ class BurpExtender(IBurpExtender, IHttpListener, ITab):
         self.response_area.setText("")
 
     def processHttpMessage(self, toolFlag, messageIsRequest, messageInfo):
-        # 如果插件未启用或消息不是请求，则返回
         if not self.enabled or not messageIsRequest:
             return
-        # 如果请求来自Intruder或Repeater并且有可用的代理
         if toolFlag in (self._callbacks.TOOL_INTRUDER, self._callbacks.TOOL_REPEATER) and self.proxies:
-            # 随机选择一个代理
             proxy = random.choice(self.proxies)
+            proxy = proxy.split(" ")[1]
             host, port = proxy.split(":")
-            # 根据选择的代理类型设置协议
-            # if self.radio_socks5.isSelected():
-            #     protocol = "socks"
-            # else:
             protocol = "http"
-            # 设置HTTP服务
             messageInfo.setHttpService(self._helpers.buildHttpService(host, int(port), protocol))
-            # 在输出区域显示信息
             self.response_area.append("[ {} ] [ {} ] [ {}:{} ]\n".format(self._callbacks.getToolName(toolFlag), protocol.upper(), host, port))
 
 
