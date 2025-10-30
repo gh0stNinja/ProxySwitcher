@@ -46,7 +46,7 @@ class BurpExtender(IBurpExtender, IHttpListener, ITab):
                 "Log": u"日志",
                 "Delete": u"删除代理",
                 "Test Selected": u"验证选中",
-                "Set Sticky": u"设为粘性",
+                "Set Fix": u"固定代理",
                 "Copy as cURL": u"复制为 cURL",
                 "Remove Dead": u"移除无效",
 
@@ -73,7 +73,7 @@ class BurpExtender(IBurpExtender, IHttpListener, ITab):
                 "Tested: %d/%d": u"已测试：%d/%d",
                 "Done: %d valid out of %d": u"完成：%d 有效，共 %d 个",
                 "Test error: %s": u"测试出错：%s",
-                "Sticky: %s": u"粘性代理：%s",
+                "Fix: %s": u"固定代理：%s",
                 "Removed %d dead proxies": u"已移除 %d 个无效代理",
                 "[%s] Using: %s": u"[%s] 使用：%s",
                 "proxy": u"代理",
@@ -93,7 +93,7 @@ class BurpExtender(IBurpExtender, IHttpListener, ITab):
                 "Log": u"Log",
                 "Delete": u"Delete Proxy",
                 "Test Selected": u"Test Selected",
-                "Set Sticky": u"Set Sticky",
+                "Set Fix": u"Set Fix",
                 "Copy as cURL": u"Copy as cURL",
                 "Remove Dead": u"Remove Dead",
 
@@ -120,7 +120,7 @@ class BurpExtender(IBurpExtender, IHttpListener, ITab):
                 "Tested: %d/%d": u"Tested: %d/%d",
                 "Done: %d valid out of %d": u"Done: %d valid out of %d",
                 "Test error: %s": u"Test error: %s",
-                "Sticky: %s": u"Sticky: %s",
+                "Fix: %s": u"Fix: %s",
                 "Removed %d dead proxies": u"Removed %d dead proxies",
                 "[%s] Using: %s": u"[%s] Using: %s",
                 "proxy": u"proxy",
@@ -145,8 +145,8 @@ class BurpExtender(IBurpExtender, IHttpListener, ITab):
 
         # === 初始化映射表 ===
         self.display_to_mode = {
-            u"随机": "random", u"轮询": "round_robin", u"粘性": "sticky",
-            u"Random": "random", u"Round-Robin": "round_robin", u"Sticky": "sticky"
+            u"随机": "random", u"轮询": "round_robin", u"固定": "sticky",
+            u"Random": "random", u"Round-Robin": "round_robin", u"Fix": "sticky"
         }
         self.mode_to_display = {v: k for k, v in self.display_to_mode.items()}
 
@@ -218,7 +218,7 @@ class BurpExtender(IBurpExtender, IHttpListener, ITab):
         # 右键菜单
         self.popup = JPopupMenu()
         self.popup.add(JMenuItem(self._t("Delete"),      actionPerformed=partial(self.remove_selected_proxy)))
-        self.popup.add(JMenuItem(self._t("Set Sticky"),   actionPerformed=partial(self.set_sticky_proxy)))
+        self.popup.add(JMenuItem(self._t("Set Fix"),   actionPerformed=partial(self.set_sticky_proxy)))
         self.popup.add(JMenuItem(self._t("Copy as cURL"), actionPerformed=partial(self.copy_as_curl)))
         self.popup.addSeparator()
         self.popup.add(JMenuItem(self._t("Verify All"),   actionPerformed=partial(self.start_verify)))
@@ -262,7 +262,7 @@ class BurpExtender(IBurpExtender, IHttpListener, ITab):
         listeners = self.mode_combo.getActionListeners()
         for l in listeners: self.mode_combo.removeActionListener(l)
         self.mode_combo.removeAllItems()
-        options = [u"随机", u"轮询", u"粘性"] if self.lang == "zh" else [u"Random", u"Round-Robin", u"Sticky"]
+        options = [u"随机", u"轮询", u"固定"] if self.lang == "zh" else [u"Random", u"Round-Robin", u"Fix"]
         for opt in options: self.mode_combo.addItem(opt)
         display = self.mode_to_display.get(current_mode, options[0])
         self.mode_combo.setSelectedItem(display)
@@ -281,7 +281,7 @@ class BurpExtender(IBurpExtender, IHttpListener, ITab):
             if hasattr(self, 'popup'):
                 items = self.popup.getComponents()
                 texts = [
-                    self._t("Delete"), self._t("Set Sticky"), self._t("Copy as cURL"),
+                    self._t("Delete"), self._t("Set Fix"), self._t("Copy as cURL"),
                     None,
                     self._t("Verify All"), self._t("Test Selected"),
                     None,
@@ -496,7 +496,7 @@ class BurpExtender(IBurpExtender, IHttpListener, ITab):
         if txt:
             p = txt.split()[0]
             self.sticky_proxy = p
-            self.log(self._t("Sticky: %s") % p)
+            self.log(self._t("Fix: %s") % p)
 
     def remove_dead(self, event=None):
         before = len(self.proxies)
