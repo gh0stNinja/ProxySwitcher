@@ -45,7 +45,7 @@ class BurpExtender(IBurpExtender, IHttpListener, ITab):
                 "Proxy List (Right-click)": u"代理列表（右键操作）",
                 "Log": u"日志",
                 "Delete": u"删除代理",
-                "Test Selected": u"测试选中",
+                "Test Selected": u"验证选中",
                 "Set Sticky": u"设为粘性",
                 "Copy as cURL": u"复制为 cURL",
                 "Remove Dead": u"移除无效",
